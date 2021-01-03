@@ -54,6 +54,7 @@ class UsersRecyclerView(val ViewModel2: UserViewModel) : RecyclerView.Adapter<Us
                 .load(details.picture.large )
                 .resize(150,150)
                 .centerCrop()
+                .placeholder(R.drawable.profile_pic_placeholder)
                 .transform(CircleTransform())
                 .into(holder.MatchedUserPic)
         }
