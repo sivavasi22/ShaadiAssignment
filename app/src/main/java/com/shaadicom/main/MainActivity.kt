@@ -1,17 +1,20 @@
 package com.shaadicom.main
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.shaadicom.R
-import com.shaadicom.database.User
-import com.shaadicom.database.UserViewModel
+import com.shaadicom.database.*
 import com.shaadicom.utils.BaseActivity
 import com.shaadicom.utils.ResourceStatus
 import com.shaadicom.utils.StatusType
@@ -21,6 +24,8 @@ class MainActivity :BaseActivity() {
     var gson = Gson()
     private lateinit var ViewModel: UserMatchViewModel
     private lateinit var ViewModel2: UserViewModel
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -31,9 +36,31 @@ class MainActivity :BaseActivity() {
         setupObservers()
     }
 
+    @SuppressLint("WrongConstant")
     private fun setUpListeners() {
-        //calling the api
-        ViewModel.callMatchData(this)
+        val connectivityManager = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val nInfo: NetworkInfo? = connectivityManager.getActiveNetworkInfo()
+        val connected = nInfo != null && nInfo.isAvailable && nInfo.isConnected
+
+        if (connected) {
+            //calling the api
+            ViewModel.callMatchData(this)
+        }
+        else{
+            ViewModel2.getUsers()
+
+            val recyclerView = findViewById<RecyclerView>(R.id.weather_recycler_view)
+            recyclerView.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+            val adapter = UsersRecyclerView(ViewModel2)
+            recyclerView.adapter = adapter
+            ViewModel2.readAllData.observe(this, Observer { user ->
+                adapter.setData(user)
+            })
+
+        }
+
+
+
     }
     @SuppressLint("WrongConstant")
     private fun setupObservers() {
@@ -64,6 +91,8 @@ class MainActivity :BaseActivity() {
             processStatus(it)
         })
     }
+
+
     private fun processStatus(resource: ResourceStatus) {
 
         when (resource.status) {
@@ -92,4 +121,7 @@ class MainActivity :BaseActivity() {
             }
         }
     }
+
+
+
 }
